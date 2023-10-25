@@ -10,14 +10,17 @@ from pkg_resources import packaging
 
 
 import torch
+from torch.utils.data import DataLoader
 import torch.cuda.nccl as nccl
+from torch.optim import Optimizer
+from torch.optim.lr_scheduler import LRScheduler
 import torch.distributed as dist
 from torch.distributed.fsdp import StateDictType
 from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 from tqdm import tqdm
-from transformers import LlamaTokenizer
+from transformers import LlamaTokenizer, LlamaModel
 
-
+from llama_recipes.configs import TrainConfig, FsdpConfig
 from llama_recipes.model_checkpointing import save_model_checkpoint, save_model_and_optimizer_sharded, save_optimizer_checkpoint
 from llama_recipes.policies import fpSixteen,bfSixteen_mixed, get_llama_wrapper
 from llama_recipes.utils.memory_utils import MemoryTrace
@@ -28,22 +31,22 @@ def set_tokenizer_params(tokenizer: LlamaTokenizer):
     tokenizer.padding_side = "left"
     
 # Converting Bytes to Megabytes
-def byte2mb(x):
+def byte2mb(x: int):
     return int(x / 2**20)
 
 def train(
-        model, 
-        train_dataloader,
-        eval_dataloader, 
-        tokenizer, 
-        optimizer, 
-        lr_scheduler, 
-        gradient_accumulation_steps, 
-        train_config, 
-        fsdp_config=None, 
-        local_rank=None, 
-        rank=None
-    ):
+    model: LlamaModel, 
+    train_dataloader: DataLoader,
+    eval_dataloader: DataLoader, 
+    tokenizer: LlamaTokenizer, 
+    optimizer: Optimizer, 
+    lr_scheduler: LRScheduler, 
+    gradient_accumulation_steps, 
+    train_config: TrainConfig, 
+    fsdp_config: FsdpConfig = None, 
+    local_rank: int = None, 
+    rank: int = None
+):
     """
     Trains the model on the given dataloader
     
@@ -128,7 +131,7 @@ def train(
         train_loss.append(train_epoch_loss)
         
         if train_config.enable_fsdp:
-            if rank==0:
+            if rank == 0:
                 print(f"Max CUDA memory allocated was {memtrace.peak} GB")
                 print(f"Max CUDA memory reserved was {memtrace.max_reserved} GB")
                 print(f"Peak active CUDA memory was {memtrace.peak_active_gb} GB")
@@ -152,13 +155,13 @@ def train(
                     dist.barrier()
                 if train_config.use_peft:
                     if train_config.enable_fsdp:
-                        if rank==0:
+                        if rank == 0:
                             print(f"we are about to save the PEFT modules")
                     else:
                         print(f"we are about to save the PEFT modules")
                     model.save_pretrained(train_config.output_dir)  
                     if train_config.enable_fsdp:
-                        if rank==0: 
+                        if rank == 0: 
                             print(f"PEFT modules are saved in {train_config.output_dir} directory")
                     else:
                         print(f"PEFT modules are saved in {train_config.output_dir} directory")
@@ -225,7 +228,13 @@ def train(
         
     return results
 
-def evaluation(model,train_config, eval_dataloader, local_rank, tokenizer):
+def evaluation(
+    model: LlamaModel, 
+    train_config: TrainConfig, 
+    eval_dataloader: DataLoader,
+    local_rank: int, 
+    tokenizer: LlamaTokenizer
+):
     """
     Evaluates the model on the given dataloader
     
@@ -273,21 +282,21 @@ def evaluation(model,train_config, eval_dataloader, local_rank, tokenizer):
     
     # Print evaluation metrics
     if train_config.enable_fsdp:
-        if local_rank==0:
+        if local_rank == 0:
             print(f" {eval_ppl=} {eval_epoch_loss=}")
     else:
         print(f" {eval_ppl=} {eval_epoch_loss=}")
         
     return eval_ppl, eval_epoch_loss
 
-def freeze_transformer_layers(model, num_layer):
+def freeze_transformer_layers(model: LlamaModel, num_layer: int):
    for i, layer in enumerate(model.model.layers):
             if i < num_layer:
                 for param in layer.parameters():
                     param.requires_grad = False
 
 
-def check_frozen_layers_peft_model(model):
+def check_frozen_layers_peft_model(model: LlamaModel):
      for i, layer in enumerate(model.base_model.model.model.layers):
             for name, param in layer.named_parameters():
                 print(f"Layer {i}, parameter {name}: requires_grad = {param.requires_grad}")
@@ -298,7 +307,7 @@ def setup():
     dist.init_process_group("nccl")
 
 
-def setup_environ_flags(rank):
+def setup_environ_flags(rank: int):
     """Set environment flags for debugging purposes"""
     os.environ["TORCH_SHOW_CPP_STACKTRACES"] = str(1)
     os.environ["NCCL_ASYNC_ERROR_HANDLING"] = str(1)
@@ -315,21 +324,21 @@ def cleanup():
     dist.destroy_process_group()
 
 
-def clear_gpu_cache(rank=None):
+def clear_gpu_cache(rank: int = None):
     """Clear the GPU cache for all ranks"""
     if rank == 0:
         print(f"Clearing GPU cache for all ranks")
     torch.cuda.empty_cache()
 
 
-def get_parameter_dtypes(model):
+def get_parameter_dtypes(model: LlamaModel):
     """Get the data types of model parameters"""
     parameter_dtypes = {}
     for name, parameter in model.named_parameters():
         parameter_dtypes[name] = parameter.dtype
     return parameter_dtypes
 
-def print_model_size(model, config, rank: int = 0) -> None:
+def print_model_size(model: LlamaModel, config: TrainConfig, rank: int = 0) -> None:
     """
     Print model name, the number of trainable parameters and initialization time.
 
@@ -348,7 +357,7 @@ def print_model_size(model, config, rank: int = 0) -> None:
 
 
 
-def get_policies(cfg, rank):
+def get_policies(cfg: TrainConfig, rank: int):
     """Get the policies for mixed precision and fsdp wrapping"""
     
     verify_bfloat_support = (
@@ -380,7 +389,7 @@ def get_policies(cfg, rank):
     wrapping_policy = get_llama_wrapper()
     return mixed_precision_policy, wrapping_policy
 
-def save_train_params(train_config, fsdp_config, rank):
+def save_train_params(train_config: TrainConfig, fsdp_config: FsdpConfig, rank: int):
     """
     This function saves the train_config and FSDP config into a train_params.yaml.
     This will be used by converter script in the inference folder to fetch the HF model name or path.
@@ -416,5 +425,5 @@ def save_train_params(train_config, fsdp_config, rank):
         # Write the YAML string to the file
         with open(file_name, 'w') as f:
             f.write(config_yaml)
-        if rank==0:
+        if rank == 0:
             print(f"training params are saved in {file_name}")
