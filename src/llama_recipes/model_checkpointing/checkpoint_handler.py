@@ -159,9 +159,9 @@ def save_model_checkpoint(
 
         # save model
         torch.save(cpu_state, save_full_path)
-
         
         print(f"model checkpoint saved for epoch {epoch} at {save_full_path}\n")
+        return save_full_path
       
 
 
@@ -226,6 +226,7 @@ def save_optimizer_checkpoint(model: nn.Module, optimizer: Optimizer, rank: int,
         torch.save(optim_state, opt_save_full_path)
 
         print(f"--> saved {opt_save_full_path} to disk")
+        return opt_save_full_path
 
 
 def load_optimizer_checkpoint(model: nn.Module, optimizer_checkpoint_path: Path, rank: int):
