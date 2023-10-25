@@ -27,9 +27,7 @@ PROMPT_DICT = {
 class InstructionDataset(Dataset):
     def __init__(self, dataset_config: AlpacaDataset, tokenizer: LlamaTokenizer, partition: str = "train", max_words: int = 30):
         self.ann = json.load(open(dataset_config.data_path))
-        if partition == "train":
-            self.ann = self.ann
-        else:
+        if partition != "train":
             self.ann = self.ann[:200]
 
         self.max_words = max_words
@@ -42,7 +40,6 @@ class InstructionDataset(Dataset):
 
     def __getitem__(self, index):
         IGNORE_INDEX = -100  # The default setting in CrossEntropyLoss
-
 
         ann = self.ann[index]
         if ann.get("input", "") == "":
