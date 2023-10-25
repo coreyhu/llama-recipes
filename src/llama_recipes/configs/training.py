@@ -4,8 +4,9 @@
 from dataclasses import dataclass
 
 
+# meta-llama/Llama-2-7b-chat-hf
 @dataclass
-class train_config:
+class TrainConfig:
     model_name: str="PATH/to/LLAMA/7B"
     enable_fsdp: bool=False
     low_cpu_fsdp: bool=False

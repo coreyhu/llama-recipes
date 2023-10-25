@@ -23,7 +23,7 @@ from transformers import (
 )
 from transformers.models.llama.modeling_llama import LlamaDecoderLayer
 
-from llama_recipes.configs import fsdp_config, train_config
+from llama_recipes.configs import FsdpConfig, TrainConfig
 from llama_recipes.policies import AnyPrecisionAdamW, apply_fsdp_checkpointing
 
 from llama_recipes.utils import fsdp_auto_wrap_policy
@@ -47,6 +47,8 @@ from llama_recipes.utils.train_utils import (
 
 def main(**kwargs):
     # Update the configuration for the training and sharding process
+    train_config = TrainConfig()
+    fsdp_config = FsdpConfig()
     update_config((train_config, fsdp_config), **kwargs)
 
     # Set the seeds for reproducibility
@@ -60,7 +62,7 @@ def main(**kwargs):
         rank = int(os.environ["RANK"])
         world_size = int(os.environ["WORLD_SIZE"])
 
-    if torch.distributed.is_initialized():
+    if dist.is_initialized():
         torch.cuda.set_device(local_rank)
         clear_gpu_cache(local_rank)
         setup_environ_flags(rank)
