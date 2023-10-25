@@ -8,7 +8,8 @@ import json
 
 import torch
 from torch.utils.data import Dataset
-
+from transformers import LlamaTokenizer
+from llama_recipes.configs.datasets import AlpacaDataset
 
 PROMPT_DICT = {
     "prompt_input": (
@@ -24,7 +25,7 @@ PROMPT_DICT = {
 }
 
 class InstructionDataset(Dataset):
-    def __init__(self, dataset_config, tokenizer, partition="train", max_words=30):
+    def __init__(self, dataset_config: AlpacaDataset, tokenizer: LlamaTokenizer, partition: str = "train", max_words: int = 30):
         self.ann = json.load(open(dataset_config.data_path))
         if partition == "train":
             self.ann = self.ann
@@ -77,7 +78,7 @@ class InstructionDataset(Dataset):
             "attention_mask":example_mask,
         }
 
-def get_alpaca_instruction_dataset(dataset_config, tokenizer, partition="train", max_words=30):
+def get_alpaca_instruction_dataset(dataset_config: AlpacaDataset, tokenizer: LlamaTokenizer, partition: str = "train", max_words=30):
     return InstructionDataset(
         dataset_config=dataset_config, 
         tokenizer=tokenizer, 

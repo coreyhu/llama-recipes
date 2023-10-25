@@ -59,7 +59,7 @@ class ConcatDataset(Dataset):
                 self.samples.append({k: v[:self.chunk_size] for k,v in buffer.items()})
                 buffer = {k: v[self.chunk_size:] for k,v in buffer.items()}
                 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int):
         return self.samples[idx]
     
     def __len__(self):

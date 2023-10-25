@@ -9,15 +9,16 @@ from datasets import load_dataset
 from pathlib import Path
 
 from torch.utils.data import Dataset
-
+from transformers import LlamaTokenizer
 from llama_recipes.datasets.utils import ConcatDataset
+from llama_recipes.configs.datasets import GrammarDataset
 
 
 class Grammar(Dataset):
     def __init__(
         self,
-        tokenizer,
-        csv_name=None,
+        tokenizer: LlamaTokenizer,
+        csv_name: str = None,
     ):
 
         try:
@@ -64,7 +65,7 @@ class Grammar(Dataset):
 
 
 def get_dataset(
-    dataset_config, tokenizer, csv_name=None
+    dataset_config: GrammarDataset, tokenizer: LlamaTokenizer, csv_name: str = None
 ):
     """cover function for handling loading the working dataset"""
     """dataset loading"""

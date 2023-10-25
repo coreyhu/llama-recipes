@@ -4,10 +4,11 @@
 # For dataset details visit: https://huggingface.co/datasets/samsum
 
 import datasets
-
+from transformers import LlamaTokenizer
 from llama_recipes.datasets.utils import Concatenator
+from llama_recipes.configs.datasets import SamsumDataset
 
-def get_preprocessed_samsum(dataset_config, tokenizer, split):
+def get_preprocessed_samsum(dataset_config: SamsumDataset, tokenizer: LlamaTokenizer, split: str):
     dataset = datasets.load_dataset("samsum", split=split)
 
     prompt = (
