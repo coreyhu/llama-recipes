@@ -26,9 +26,8 @@ def get_preprocessed_samsum(dataset_config: SamsumDataset, tokenizer: LlamaToken
 
     dataset = dataset.map(apply_prompt_template, remove_columns=list(dataset.features))
         
-    dataset = dataset.map(
+    return dataset.map(
         lambda sample: tokenizer(sample["text"]),
         batched=True,
         remove_columns=list(dataset.features),
     ).map(Concatenator(), batched=True)
-    return dataset

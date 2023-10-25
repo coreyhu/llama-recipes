@@ -9,9 +9,17 @@ class DatasetConfig:
     train_split: str
     test_split: str
 
+@dataclass
+class FinetuneDatasetConfig(DatasetConfig):
+    pass
+
+class PretrainDatasetConfig(DatasetConfig):
+    subset: str = None
+    text_column: str = None
+
 
 @dataclass
-class SamsumDataset(DatasetConfig):
+class SamsumDataset(FinetuneDatasetConfig):
     dataset: str =  "samsum_dataset"
     train_split: str = "train"
     test_split: str = "validation"
@@ -19,7 +27,7 @@ class SamsumDataset(DatasetConfig):
     
     
 @dataclass
-class GrammarDataset(DatasetConfig):
+class GrammarDataset(FinetuneDatasetConfig):
     dataset: str = "grammar_dataset"
     train_split: str = "src/llama_recipes/datasets/grammar_dataset/gtrain_10k.csv" 
     test_split: str = "src/llama_recipes/datasets/grammar_dataset/grammar_validation.csv"
@@ -27,7 +35,7 @@ class GrammarDataset(DatasetConfig):
 
     
 @dataclass
-class AlpacaDataset(DatasetConfig):
+class AlpacaDataset(FinetuneDatasetConfig):
     dataset: str = "alpaca_dataset"
     train_split: str = "train"
     test_split: str = "val"
@@ -35,11 +43,22 @@ class AlpacaDataset(DatasetConfig):
     
     
 @dataclass
-class CustomDataset(DatasetConfig):
+class CustomDataset(FinetuneDatasetConfig):
     dataset: str = "custom_dataset"
     file: str = "examples/custom_dataset.py"
     train_split: str = "train"
     test_split: str = "validation"
+
+
+@dataclass
+class C4PretrainDataset(PretrainDatasetConfig):
+    dataset: str =  "c4"
+    subset: str = "en.noblocklist"
+    text_column: str = "text"
+    train_split: str = "train"
+    test_split: str = "validation"
+    input_length: int = 2048
+
 
 DATASET_CONFIGS = {
     "samsum_dataset": SamsumDataset,
