@@ -12,6 +12,7 @@ from peft import get_peft_model, prepare_model_for_int8_training
 from torch.distributed.fsdp import (
     FullyShardedDataParallel as FSDP,
 )
+from torch.utils.data import DataLoader
 from torch.distributed.fsdp.fully_sharded_data_parallel import CPUOffload
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DistributedSampler
@@ -198,7 +199,7 @@ def main(**kwargs):
             )
 
     # Create DataLoaders for the training and validation dataset
-    train_dataloader = torch.utils.data.DataLoader(
+    train_dataloader = DataLoader(
         dataset_train,
         batch_size=train_config.batch_size_training,
         num_workers=train_config.num_workers_dataloader,
@@ -210,7 +211,7 @@ def main(**kwargs):
 
     eval_dataloader = None
     if train_config.run_validation:
-        eval_dataloader = torch.utils.data.DataLoader(
+        eval_dataloader = DataLoader(
             dataset_val,
             batch_size=train_config.val_batch_size,
             num_workers=train_config.num_workers_dataloader,

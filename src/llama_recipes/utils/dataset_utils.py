@@ -13,7 +13,7 @@ from llama_recipes.datasets import (
     get_alpaca_dataset,
     get_samsum_dataset,
 )
-from llama_recipes.configs.datasets import DatasetConfig, CustomDataset
+from llama_recipes.configs import DatasetConfig, CustomDataset
 
 
 def load_module_from_py_file(py_file: str) -> object:

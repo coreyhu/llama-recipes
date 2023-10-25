@@ -41,7 +41,7 @@ def train(
     tokenizer: LlamaTokenizer, 
     optimizer: Optimizer, 
     lr_scheduler: LRScheduler, 
-    gradient_accumulation_steps, 
+    gradient_accumulation_steps: int, 
     train_config: TrainConfig, 
     fsdp_config: FsdpConfig = None, 
     local_rank: int = None, 

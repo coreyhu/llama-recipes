@@ -9,7 +9,7 @@ from peft import (
     PrefixTuningConfig,
 )
 from llama_recipes.configs.datasets import DATASET_CONFIGS
-from llama_recipes.configs import LoraConfig, LlamaAdapterConfig, PrefixConfig, TrainConfig
+from llama_recipes.configs import LlamaLoraConfig, LlamaAdapterConfig, PrefixConfig, TrainConfig
 from llama_recipes.utils.dataset_utils import DATASET_PREPROC
 
 
@@ -36,7 +36,7 @@ def update_config(config: object, **kwargs):
                         
 def generate_peft_config(train_config: TrainConfig, kwargs: dict):
     config_cls_map = {
-        "lora": (LoraConfig, LoraConfig),
+        "lora": (LlamaLoraConfig, LoraConfig),
         "llama_adapter": (LlamaAdapterConfig, AdaptionPromptConfig),
         "prefix": (PrefixConfig, PrefixTuningConfig)
     }
