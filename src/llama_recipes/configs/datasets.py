@@ -3,9 +3,15 @@
 
 from dataclasses import dataclass
 
+@dataclass
+class DatasetConfig:
+    dataset: str
+    train_split: str
+    test_split: str
+
 
 @dataclass
-class SamsumDataset:
+class SamsumDataset(DatasetConfig):
     dataset: str =  "samsum_dataset"
     train_split: str = "train"
     test_split: str = "validation"
@@ -13,7 +19,7 @@ class SamsumDataset:
     
     
 @dataclass
-class GrammarDataset:
+class GrammarDataset(DatasetConfig):
     dataset: str = "grammar_dataset"
     train_split: str = "src/llama_recipes/datasets/grammar_dataset/gtrain_10k.csv" 
     test_split: str = "src/llama_recipes/datasets/grammar_dataset/grammar_validation.csv"
@@ -21,7 +27,7 @@ class GrammarDataset:
 
     
 @dataclass
-class AlpacaDataset:
+class AlpacaDataset(DatasetConfig):
     dataset: str = "alpaca_dataset"
     train_split: str = "train"
     test_split: str = "val"
@@ -29,7 +35,7 @@ class AlpacaDataset:
     
     
 @dataclass
-class CustomDataset:
+class CustomDataset(DatasetConfig):
     dataset: str = "custom_dataset"
     file: str = "examples/custom_dataset.py"
     train_split: str = "train"

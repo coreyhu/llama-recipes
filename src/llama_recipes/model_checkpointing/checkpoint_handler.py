@@ -5,6 +5,7 @@ from pathlib import Path
 from datetime import datetime
 import torch
 import time
+from typing import Union
 
 from torch.distributed.fsdp import (
     FullyShardedDataParallel as FSDP,
@@ -14,6 +15,8 @@ from torch.distributed.fsdp import (
     # ShardedStateDictConfig, # un-flattened param but shards, usable by other parallel schemes.
 )
 
+from torch import nn
+from torch.optim import Optimizer
 from torch.distributed._shard.checkpoint import (
     FileSystemReader,
     FileSystemWriter,
@@ -25,10 +28,10 @@ from torch.distributed.checkpoint.default_planner import (
     DefaultLoadPlanner,
 )
 
-
 from torch.distributed.fsdp.fully_sharded_data_parallel import StateDictType
 import torch.distributed._shard.checkpoint as dist_cp
 import torch.distributed as dist
+from llama_recipes.configs import TrainConfig
 
 
 def get_date_of_run():
@@ -44,7 +47,7 @@ def get_date_of_run():
 fullstate_save_policy = FullStateDictConfig(offload_to_cpu=True, rank0_only=True)
 
 
-def load_model_sharded(model, rank, cfg):
+def load_model_sharded(model: nn.Module, rank: int, cfg: TrainConfig):
     # torch.manual_seed(103)
     folder_name = (
         cfg.dist_checkpoint_root_folder
@@ -83,7 +86,7 @@ def load_model_sharded(model, rank, cfg):
         print(f"Sharded state checkpoint loaded from {load_dir}")
 
 
-def save_model_and_optimizer_sharded(model, rank, cfg,optim=None):
+def save_model_and_optimizer_sharded(model: nn.Module, rank: int, cfg: TrainConfig , optim: dict = None):
     """save model and optimizer via sharded_state_dict to save_dir"""
     
     folder_name = (
@@ -123,11 +126,11 @@ def save_model_and_optimizer_sharded(model, rank, cfg,optim=None):
             f"Checkpoint Time = {t1-t0:.4f}\n"
         )
 def save_model_checkpoint(
-    model,
-    optimizer,
-    rank,
-    cfg,
-    epoch=1,
+    model: nn.Module,
+    optimizer: Optimizer,
+    rank: int,
+    cfg: TrainConfig,
+    epoch: int = 1,
 ):
     """saving model via rank0 cpu streaming and full_state_dict"""
 
@@ -162,7 +165,7 @@ def save_model_checkpoint(
       
 
 
-def load_model_checkpoint(model, rank, cfg):
+def load_model_checkpoint(model: nn.Module, rank: int, cfg: TrainConfig):
     """load local checkpoint to rank0 cpu
     must be called * before * passing to FSDP"""
 
@@ -189,7 +192,7 @@ def load_model_checkpoint(model, rank, cfg):
     print(f"model checkpoint loaded to rank0 cpu")
 
 
-def save_optimizer_checkpoint(model, optimizer, rank, cfg, epoch=1):
+def save_optimizer_checkpoint(model: nn.Module, optimizer: Optimizer, rank: int, cfg: TrainConfig, epoch: int = 1):
     """save optimizer state via full state dict"""
 
    
@@ -225,7 +228,7 @@ def save_optimizer_checkpoint(model, optimizer, rank, cfg, epoch=1):
         print(f"--> saved {opt_save_full_path} to disk")
 
 
-def load_optimizer_checkpoint(model, optimizer_checkpoint_path, rank):
+def load_optimizer_checkpoint(model: nn.Module, optimizer_checkpoint_path: Path, rank: int):
     """load an fsdp optimizer full_state checkpoint using scatter method
     this ensures only rank 0 loads the optimizer state dict and scatters to other ranks
     """
@@ -247,7 +250,7 @@ def load_optimizer_checkpoint(model, optimizer_checkpoint_path, rank):
 
     print(f"optimizer shard loaded on rank {rank}")
 
-def load_sharded_model_single_gpu(model,model_path):
+def load_sharded_model_single_gpu(model: nn.Module, model_path: Union[str, Path]):
     
     reader = FileSystemReader(model_path)
     
