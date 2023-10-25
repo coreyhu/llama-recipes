@@ -13,7 +13,7 @@ from torch.utils.data import Dataset
 from llama_recipes.datasets.utils import ConcatDataset
 
 
-class grammar(Dataset):
+class Grammar(Dataset):
     def __init__(
         self,
         tokenizer,
@@ -34,7 +34,6 @@ class grammar(Dataset):
         # if num_samples:
         #    self.dataset = self.dataset.select(list(range(0, num_samples)))
         self.tokenizer = tokenizer
-        self.print_text = False  # print_text
 
     def __len__(self):
         return self.dataset["train"].shape[0]
@@ -42,9 +41,6 @@ class grammar(Dataset):
     def convert_to_features(self, example_batch):
 
         # Create prompt and tokenize contexts and questions
-
-        if self.print_text:
-            print("Input Text: ", self.clean_text(example_batch["text"]))
 
         input_ = example_batch["input"]
         target_ = example_batch["target"]
@@ -76,7 +72,7 @@ def get_dataset(
         currPath = Path.cwd() / "datasets_grammar" / "grammar_train.csv"
         print(f"Loading dataset {currPath}")
         csv_name = str(currPath)
-    dataset = grammar(
+    dataset = Grammar(
         tokenizer=tokenizer,
         csv_name=csv_name,
     )
