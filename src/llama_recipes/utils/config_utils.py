@@ -34,7 +34,7 @@ def update_config(config: object, **kwargs):
                 print(f"Warning: unknown parameter {k}")
                         
                         
-def generate_peft_config(train_config: TrainConfig, kwargs):
+def generate_peft_config(train_config: TrainConfig, kwargs: dict):
     config_cls_map = {
         "lora": (LoraConfig, LoraConfig),
         "llama_adapter": (LlamaAdapterConfig, AdaptionPromptConfig),
@@ -51,7 +51,7 @@ def generate_peft_config(train_config: TrainConfig, kwargs):
     return peft_config_cls(**params)
 
 
-def generate_dataset_config(train_config: TrainConfig, kwargs):
+def generate_dataset_config(train_config: TrainConfig, kwargs: dict):
     names = tuple(DATASET_PREPROC.keys())
     assert train_config.dataset in names, f"Unknown dataset: {train_config.dataset}"
     

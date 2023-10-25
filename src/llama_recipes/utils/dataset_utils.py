@@ -5,13 +5,15 @@ import importlib
 from functools import partial
 from pathlib import Path
 
-import torch
+from torch.utils import data
+from transformers import LlamaTokenizer
 
 from llama_recipes.datasets import (
     get_grammar_dataset,
     get_alpaca_dataset,
     get_samsum_dataset,
 )
+from llama_recipes.configs.datasets import DatasetConfig, CustomDataset
 
 
 def load_module_from_py_file(py_file: str) -> object:
@@ -28,7 +30,7 @@ def load_module_from_py_file(py_file: str) -> object:
     return module
 
 
-def get_custom_dataset(dataset_config, tokenizer, split: str):
+def get_custom_dataset(dataset_config: CustomDataset, tokenizer: LlamaTokenizer, split: str):
     if ":" in dataset_config.file:
         module_path, func_name = dataset_config.file.split(":")
     else:
@@ -58,8 +60,8 @@ DATASET_PREPROC = {
 
 
 def get_preprocessed_dataset(
-    tokenizer, dataset_config, split: str = "train"
-) -> torch.utils.data.Dataset:
+    tokenizer: LlamaTokenizer, dataset_config: DatasetConfig, split: str = "train"
+) -> data.Dataset:
     if not dataset_config.dataset in DATASET_PREPROC:
         raise NotImplementedError(f"{dataset_config.dataset} is not (yet) implemented")
 

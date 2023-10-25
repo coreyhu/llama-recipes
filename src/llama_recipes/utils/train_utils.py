@@ -18,7 +18,7 @@ import torch.distributed as dist
 from torch.distributed.fsdp import StateDictType
 from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 from tqdm import tqdm
-from transformers import LlamaTokenizer, LlamaModel
+from transformers import LlamaTokenizer, LlamaForCausalLM
 
 from llama_recipes.configs import TrainConfig, FsdpConfig
 from llama_recipes.model_checkpointing import save_model_checkpoint, save_model_and_optimizer_sharded, save_optimizer_checkpoint
@@ -35,7 +35,7 @@ def byte2mb(x: int):
     return int(x / 2**20)
 
 def train(
-    model: LlamaModel, 
+    model: LlamaForCausalLM, 
     train_dataloader: DataLoader,
     eval_dataloader: DataLoader, 
     tokenizer: LlamaTokenizer, 
@@ -229,7 +229,7 @@ def train(
     return results
 
 def evaluation(
-    model: LlamaModel, 
+    model: LlamaForCausalLM, 
     train_config: TrainConfig, 
     eval_dataloader: DataLoader,
     local_rank: int, 
@@ -289,14 +289,14 @@ def evaluation(
         
     return eval_ppl, eval_epoch_loss
 
-def freeze_transformer_layers(model: LlamaModel, num_layer: int):
+def freeze_transformer_layers(model: LlamaForCausalLM, num_layer: int):
    for i, layer in enumerate(model.model.layers):
             if i < num_layer:
                 for param in layer.parameters():
                     param.requires_grad = False
 
 
-def check_frozen_layers_peft_model(model: LlamaModel):
+def check_frozen_layers_peft_model(model: LlamaForCausalLM):
      for i, layer in enumerate(model.base_model.model.model.layers):
             for name, param in layer.named_parameters():
                 print(f"Layer {i}, parameter {name}: requires_grad = {param.requires_grad}")
@@ -331,14 +331,14 @@ def clear_gpu_cache(rank: int = None):
     torch.cuda.empty_cache()
 
 
-def get_parameter_dtypes(model: LlamaModel):
+def get_parameter_dtypes(model: LlamaForCausalLM):
     """Get the data types of model parameters"""
     parameter_dtypes = {}
     for name, parameter in model.named_parameters():
         parameter_dtypes[name] = parameter.dtype
     return parameter_dtypes
 
-def print_model_size(model: LlamaModel, config: TrainConfig, rank: int = 0) -> None:
+def print_model_size(model: LlamaForCausalLM, config: TrainConfig, rank: int = 0) -> None:
     """
     Print model name, the number of trainable parameters and initialization time.
 

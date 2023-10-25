@@ -5,7 +5,7 @@ from peft import PeftModel
 from transformers import LlamaForCausalLM, LlamaConfig
 
 # Function to load the main model for text generation
-def load_model(model_name, quantization):
+def load_model(model_name: str, quantization: bool):
     model = LlamaForCausalLM.from_pretrained(
         model_name,
         return_dict=True,
@@ -17,7 +17,7 @@ def load_model(model_name, quantization):
 
 
 # Function to load the PeftModel for performance optimization
-def load_peft_model(model, peft_model):
+def load_peft_model(model: LlamaForCausalLM, peft_model: PeftModel):
     peft_model = PeftModel.from_pretrained(model, peft_model)
     return peft_model
 

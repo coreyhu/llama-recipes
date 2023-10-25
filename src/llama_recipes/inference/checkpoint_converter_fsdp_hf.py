@@ -11,16 +11,17 @@ import yaml
 from transformers import LlamaTokenizer
 
 from llama_recipes.inference.model_utils import  load_llama_from_config
+from llama_recipes.model_checkpointing import load_sharded_model_single_gpu
 
-# Get the current file's directory
-current_directory = os.path.dirname(os.path.abspath(__file__))
+# # Get the current file's directory
+# current_directory = os.path.dirname(os.path.abspath(__file__))
 
-# Get the parent directory
-parent_directory = os.path.dirname(current_directory)
+# # Get the parent directory
+# parent_directory = os.path.dirname(current_directory)
 
-# Append the parent directory to sys.path
-sys.path.append(parent_directory)
-from model_checkpointing import load_sharded_model_single_gpu
+# # Append the parent directory to sys.path
+# sys.path.append(parent_directory)
+# from model_checkpointing import load_sharded_model_single_gpu
 
 def main(
     fsdp_checkpoint_path="", # Path to FSDP Sharded model checkpoints
