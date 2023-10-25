@@ -76,3 +76,11 @@ class InstructionDataset(Dataset):
             "labels": labels,
             "attention_mask":example_mask,
         }
+
+def get_alpaca_instruction_dataset(dataset_config, tokenizer, partition="train", max_words=30):
+    return InstructionDataset(
+        dataset_config=dataset_config, 
+        tokenizer=tokenizer, 
+        partition=partition, 
+        max_words=max_words
+    )
