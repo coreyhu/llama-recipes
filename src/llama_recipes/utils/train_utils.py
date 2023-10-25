@@ -86,7 +86,11 @@ def train(
         with MemoryTrace() as memtrace:  # track the memory usage
             model.train()
             total_loss = 0.0
-            total_length = len(train_dataloader)//gradient_accumulation_steps
+            try:
+                total_length = len(train_dataloader)//gradient_accumulation_steps
+            except TypeError:
+                total_length = None
+                
             pbar = tqdm(colour="blue", desc=f"Training Epoch: {epoch+1}", total=total_length, dynamic_ncols=True)
             for step, batch in enumerate(train_dataloader):
                 for key in batch.keys():

@@ -58,7 +58,7 @@ class ConcatDataset(Dataset):
             while len(next(iter(buffer.values()))) > self.chunk_size:
                 self.samples.append({k: v[:self.chunk_size] for k,v in buffer.items()})
                 buffer = {k: v[self.chunk_size:] for k,v in buffer.items()}
-                
+
     def __getitem__(self, idx: int):
         return self.samples[idx]
     

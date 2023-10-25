@@ -18,10 +18,17 @@ class PretrainDatasetConfig(DatasetConfig):
     subset: str = None
     text_column: str = None
 
+@dataclass
+class MergedDatasetConfig(DatasetConfig):
+    configs: list[DatasetConfig] = None
+    dataset: str = "merged_dataset"
+    train_split: str = "train"
+    test_split: str = "test"
+
 
 @dataclass
 class SamsumDataset(FinetuneDatasetConfig):
-    dataset: str =  "samsum_dataset"
+    dataset: str =  "samsum"
     train_split: str = "train"
     test_split: str = "validation"
     input_length: int = 2048
@@ -29,7 +36,7 @@ class SamsumDataset(FinetuneDatasetConfig):
     
 @dataclass
 class GrammarDataset(FinetuneDatasetConfig):
-    dataset: str = "grammar_dataset"
+    dataset: str = "grammar"
     train_split: str = "src/llama_recipes/datasets/grammar_dataset/gtrain_10k.csv" 
     test_split: str = "src/llama_recipes/datasets/grammar_dataset/grammar_validation.csv"
     input_length: int = 2048
@@ -37,7 +44,7 @@ class GrammarDataset(FinetuneDatasetConfig):
     
 @dataclass
 class AlpacaDataset(FinetuneDatasetConfig):
-    dataset: str = "alpaca_dataset"
+    dataset: str = "alpaca"
     train_split: str = "train"
     test_split: str = "val"
     data_path: str = "src/llama_recipes/datasets/alpaca_data.json"
@@ -60,20 +67,11 @@ class C4PretrainDataset(PretrainDatasetConfig):
     test_split: str = "validation"
     input_length: int = 2048
 
-@dataclass
-class C4PretrainDataset(PretrainDatasetConfig):
-    dataset: str =  "c4"
-    subset: str = "en.noblocklist"
-    text_column: str = "text"
-    train_split: str = "train"
-    test_split: str = "validation"
-    input_length: int = 2048
-
 
 DATASET_CONFIGS = {
-    "samsum_dataset": SamsumDataset,
-    "grammar_dataset": GrammarDataset,
-    "alpaca_dataset": AlpacaDataset,
-    "custom_dataset": CustomDataset,
-    "c4_dataset": C4PretrainDataset,
+    "samsum": SamsumDataset,
+    "grammar": GrammarDataset,
+    "alpaca": AlpacaDataset,
+    "c4": C4PretrainDataset,
+    "custom_dataset": CustomDataset
 }

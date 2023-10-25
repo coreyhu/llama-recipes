@@ -4,7 +4,7 @@
 import importlib
 from functools import partial
 from pathlib import Path
-
+from datasets import concatenate_datasets
 from torch.utils import data
 from transformers import LlamaTokenizer
 
@@ -12,8 +12,9 @@ from llama_recipes.datasets import (
     get_grammar_dataset,
     get_alpaca_dataset,
     get_samsum_dataset,
+    get_pretrain_dataset
 )
-from llama_recipes.configs import DatasetConfig, CustomDataset
+from llama_recipes.configs.datasets import DatasetConfig, CustomDataset, MergedDatasetConfig, PretrainDatasetConfig
 
 
 def load_module_from_py_file(py_file: str) -> object:
@@ -52,21 +53,35 @@ def get_custom_dataset(dataset_config: CustomDataset, tokenizer: LlamaTokenizer,
     
 
 DATASET_PREPROC = {
-    "alpaca_dataset": partial(get_alpaca_dataset, max_words=224),
-    "grammar_dataset": get_grammar_dataset,
-    "samsum_dataset": get_samsum_dataset,
-    "custom_dataset": get_custom_dataset,
+    "alpaca": partial(get_alpaca_dataset, max_words=224),
+    "grammar": get_grammar_dataset,
+    "samsum": get_samsum_dataset,
+    "pretrain": get_pretrain_dataset,
+    "custom_dataset": get_custom_dataset
 }
 
 
 def get_preprocessed_dataset(
     tokenizer: LlamaTokenizer, dataset_config: DatasetConfig, split: str = "train"
 ) -> data.Dataset:
-    if not dataset_config.dataset in DATASET_PREPROC:
+    if isinstance(dataset_config, MergedDatasetConfig):
+        assert dataset_config.configs, "Missing configs field"
+        return concatenate_datasets(
+            dsets=[get_preprocessed_dataset(
+                tokenizer=tokenizer, 
+                dataset_config=config, 
+                split=split
+            ) for config in dataset_config.configs]
+        )
+    elif isinstance(dataset_config, PretrainDatasetConfig):
+        ds_preprocessing_fn = get_pretrain_dataset
+    elif dataset_config.dataset not in DATASET_PREPROC:
         raise NotImplementedError(f"{dataset_config.dataset} is not (yet) implemented")
-
+    else:
+        ds_preprocessing_fn = DATASET_PREPROC[dataset_config.dataset]
+    
     split = dataset_config.train_split if split == "train" else dataset_config.test_split
-    return DATASET_PREPROC[dataset_config.dataset](
+    return ds_preprocessing_fn(
         dataset_config,
         tokenizer,
         split,
