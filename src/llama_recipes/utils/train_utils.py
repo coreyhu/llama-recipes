@@ -86,13 +86,22 @@ def train(
         with MemoryTrace() as memtrace:  # track the memory usage
             model.train()
             total_loss = 0.0
+
             try:
-                total_length = len(train_dataloader)//gradient_accumulation_steps
+                n_steps = len(train_dataloader)
             except TypeError:
-                total_length = None
-                
+                n_steps = None
+            
+            total_length = None
+            if n_steps is not None:
+                total_length = n_steps // gradient_accumulation_steps
+
+            
             pbar = tqdm(colour="blue", desc=f"Training Epoch: {epoch+1}", total=total_length, dynamic_ncols=True)
             for step, batch in enumerate(train_dataloader):
+                is_last_step = False
+                if n_steps is not None:
+                    is_last_step = step == n_steps - 1
                 for key in batch.keys():
                     if train_config.enable_fsdp:
                         batch[key] = batch[key].to(local_rank)
@@ -105,7 +114,7 @@ def train(
                 if train_config.use_fp16:
                     # if fp16 is enabled, use gradient scaler to handle gradient update
                     scaler.scale(loss).backward()
-                    if (step + 1) % gradient_accumulation_steps == 0 or step == len(train_dataloader) - 1:
+                    if (step + 1) % gradient_accumulation_steps == 0 or is_last_step:
                         scaler.step(optimizer)
                         scaler.update()
                         optimizer.zero_grad()
@@ -113,12 +122,12 @@ def train(
                 else:
                     # regular backpropagation when fp16 is not used
                     loss.backward()
-                    if (step + 1) % gradient_accumulation_steps == 0 or step == len(train_dataloader) - 1:
+                    if (step + 1) % gradient_accumulation_steps == 0 or is_last_step:
                         optimizer.step()
                         optimizer.zero_grad()
                         pbar.update(1)
 
-                pbar.set_description(f"Training Epoch: {epoch+1}/{train_config.num_epochs}, step {step}/{len(train_dataloader)} completed (loss: {loss.detach().float()})")
+                pbar.set_description(f"Training Epoch: {epoch+1}/{train_config.num_epochs}, step {step}/{n_steps if n_steps else -1} completed (loss: {loss.detach().float()})")
             pbar.close()
                 
         epoch_end_time = time.perf_counter()-epoch_start_time
@@ -126,9 +135,13 @@ def train(
         # Reducing total_loss across all devices if there's more than one CUDA device
         if torch.cuda.device_count() > 1 and train_config.enable_fsdp:
             dist.all_reduce(total_loss, op=dist.ReduceOp.SUM)
-        train_epoch_loss = total_loss / len(train_dataloader)
+        if n_steps is not None:
+            train_epoch_loss = total_loss / n_steps
+        else:
+            train_epoch_loss = total_loss
+
         if train_config.enable_fsdp:
-            train_epoch_loss = train_epoch_loss/world_size
+            train_epoch_loss /= world_size
         train_perplexity = torch.exp(train_epoch_loss)
         
         train_prep.append(train_perplexity)
@@ -275,7 +288,11 @@ def evaluation(
         dist.all_reduce(eval_loss, op=dist.ReduceOp.SUM)
     
     # Compute average loss and perplexity
-    eval_epoch_loss = eval_loss / len(eval_dataloader)
+    try:
+        n_eval_steps = len(eval_dataloader)
+    except TypeError:
+        n_eval_steps = 1
+    eval_epoch_loss = eval_loss / n_eval_steps
     if train_config.enable_fsdp:
         eval_epoch_loss = eval_epoch_loss/world_size
     eval_ppl = torch.exp(eval_epoch_loss)
