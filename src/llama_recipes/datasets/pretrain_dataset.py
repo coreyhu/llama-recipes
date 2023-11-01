@@ -12,7 +12,7 @@ def get_pretrain_dataset(
     dataset_config: PretrainDatasetConfig, 
     tokenizer: LlamaTokenizer, 
     split: str, 
-    streaming: bool = True
+    streaming: bool = False
 ):
     dataset = datasets.load_dataset(
         dataset_config.dataset, 
