@@ -5,7 +5,6 @@
 
 import datasets
 from transformers import LlamaTokenizer
-from llama_recipes.datasets.utils import Concatenator
 from llama_recipes.configs.datasets import PretrainDatasetConfig
 
 def get_pretrain_dataset(
@@ -30,4 +29,4 @@ def get_pretrain_dataset(
         lambda sample: tokenizer(sample[preprocess_col]),
         batched=True,
         remove_columns=[preprocess_col]
-    ).map(Concatenator(), batched=True)
+    )
