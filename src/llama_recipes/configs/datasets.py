@@ -31,7 +31,6 @@ class SamsumDataset(FinetuneDatasetConfig):
     dataset: str =  "samsum"
     train_split: str = "train"
     test_split: str = "validation"
-    input_length: int = 2048
     
     
 @dataclass
@@ -39,7 +38,6 @@ class GrammarDataset(FinetuneDatasetConfig):
     dataset: str = "grammar"
     train_split: str = "src/llama_recipes/datasets/grammar_dataset/gtrain_10k.csv" 
     test_split: str = "src/llama_recipes/datasets/grammar_dataset/grammar_validation.csv"
-    input_length: int = 2048
 
     
 @dataclass

@@ -36,24 +36,24 @@ def get_custom_dataset(dataset_config: CustomDataset, tokenizer: LlamaTokenizer,
         module_path, func_name = dataset_config.file.split(":")
     else:
         module_path, func_name = dataset_config.file, "get_custom_dataset"
-        
+
     if not module_path.endswith(".py"):
         raise ValueError(f"Dataset file {module_path} is not a .py file.")
-    
+
     module_path = Path(module_path)
     if not module_path.is_file():
         raise FileNotFoundError(f"Dataset py file {module_path.as_posix()} does not exist or is not a file.")
-    
+
     module = load_module_from_py_file(module_path.as_posix())
     try:
         return getattr(module, func_name)(dataset_config, tokenizer, split)
     except AttributeError as e:
         print(f"It seems like the given method name ({func_name}) is not present in the dataset .py file ({module_path.as_posix()}).")
         raise e
-    
+
 
 DATASET_PREPROC = {
-    "alpaca": partial(get_alpaca_dataset, max_words=224),
+    "alpaca": get_alpaca_dataset,
     "grammar": get_grammar_dataset,
     "samsum": get_samsum_dataset,
     "pretrain": get_pretrain_dataset,
